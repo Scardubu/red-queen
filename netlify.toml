@@ -1,0 +1,71 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# For Astro's client-side routing in SPAs
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Security headers (essential for modern sites)
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    X-XSS-Protection = "1; mode=block"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Content-Security-Policy = """
+      default-src 'self';
+      script-src 'self' 'unsafe-inline' https:;
+      style-src 'self' 'unsafe-inline';
+      img-src 'self' data: https:;
+      font-src 'self';
+      connect-src 'self' https://*.netlify.app;
+      frame-ancestors 'none';
+    """
+    Permissions-Policy = """
+      geolocation=(),
+      microphone=(),
+      camera=(),
+      payment=()
+    """
+
+# Cache optimization for static assets
+[[headers]]
+  for = "/_astro/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Netlify Functions configuration
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+# Edge Functions configuration (optional)
+[edge_functions]
+  directory = "netlify/edge-functions"
+
+# Build plugins (recommended)
+[[plugins]]
+  package = "netlify-plugin-astro"
+
+# File processing rules
+[build.processing]
+  skip_processing = true  # We handle everything through Astro
+
+# Compression settings
+[build.environment]
+  NETLIFY_USE_LEGACY_BUNDLER = "false"  # Use modern bundler
+  AWS_LAMBDA_ESBUILD_BINARY_PATH = "./node_modules/esbuild/bin/esbuild"
+
+[context.production.environment]
+  NODE_ENV = "production"
+  ENABLE_GZIP = "true"
+  ENABLE_BROTLI = "true"
